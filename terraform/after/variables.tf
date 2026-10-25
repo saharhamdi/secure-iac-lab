@@ -38,3 +38,14 @@ variable "allowed_cidr" {
     error_message = "Le CIDR 0.0.0.0/0 est interdit pour l'acces entrant."
   }
 }
+
+variable "egress_cidr" {
+  description = "CIDR autorise pour le trafic HTTPS sortant (proxy ou endpoints VPC, jamais 0.0.0.0/0)"
+  type        = string
+  default     = "10.0.0.0/16"
+
+  validation {
+    condition     = var.egress_cidr != "0.0.0.0/0"
+    error_message = "Le CIDR 0.0.0.0/0 est interdit pour la sortie."
+  }
+}
