@@ -1,0 +1,100 @@
+name: IaC Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Versions "after" : le pipeline doit etre VERT
+  after:
+    name: Controles sur les versions "after"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Checkov (Terraform et Dockerfile)
+        run: |
+          pip install checkov
+          mkdir -p reports
+          checkov -d terraform/after -d docker/after \
+            --framework terraform dockerfile \
+            --output cli --output sarif \
+            --output-file-path console,reports
+
+      - name: Envoyer le SARIF vers l'onglet Security
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: reports
+          category: checkov-after
+
+      - name: Hadolint (Dockerfile)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: docker/after/Dockerfile
+
+      - name: Trivy (configuration Terraform)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: terraform/after
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+      - name: Trivy (configuration Docker)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: docker/after
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+  # Versions "before" : echecs attendus, rapports publies sans bloquer
+  before:
+    name: Rapports sur les versions "before" (non bloquant)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Checkov (echecs attendus)
+        continue-on-error: true
+        run: |
+          pip install checkov
+          mkdir -p reports-before
+          checkov -d terraform/before -d docker/before \
+            --framework terraform dockerfile \
+            --output cli --output json \
+            --output-file-path console,reports-before || true
+
+      - name: Gitleaks (secrets, echecs attendus)
+        continue-on-error: true
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publier les rapports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-before
+          path: reports-before
+          if-no-files-found: ignore

@@ -1,0 +1,14 @@
+# Ne jamais envoyer ces fichiers dans le contexte de build
+.git
+.gitignore
+.dockerignore
+.env
+*.env
+secret_key.txt
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+docker-compose.yml
+Dockerfile
+README.md
