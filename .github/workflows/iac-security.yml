@@ -46,21 +46,12 @@ jobs:
         with:
           dockerfile: docker/after/Dockerfile
 
-      - name: Trivy (configuration Terraform)
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: config
-          scan-ref: terraform/after
-          severity: HIGH,CRITICAL
-          exit-code: "1"
-
-      - name: Trivy (configuration Docker)
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: config
-          scan-ref: docker/after
-          severity: HIGH,CRITICAL
-          exit-code: "1"
+      - name: Trivy (configuration Terraform et Docker)
+        run: |
+          docker run --rm -v "$PWD:/work" aquasec/trivy:latest \
+            config --severity HIGH,CRITICAL --exit-code 1 /work/terraform/after
+          docker run --rm -v "$PWD:/work" aquasec/trivy:latest \
+            config --severity HIGH,CRITICAL --exit-code 1 /work/docker/after
 
   # Versions "before" : echecs attendus, rapports publies sans bloquer
   before:
