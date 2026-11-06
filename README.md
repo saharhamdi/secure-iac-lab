@@ -6,8 +6,6 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 
-## 🇬🇧 English
-
 ### Goal
 
 Show, with concrete examples, how to **detect** and **fix** the most common misconfigurations in infrastructure code, and how to **prevent them from coming back** with an automated pipeline (DevSecOps / *shift-left*).
