@@ -6,103 +6,6 @@
 ![IaC Security Scan](../../actions/workflows/iac-security.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-[🇫🇷 Français](#-français) · [🇬🇧 English](#-english)
-
----
-
-## 🇫🇷 Français
-
-### Objectif
-
-Montrer, sur des exemples concrets, comment on **détecte** puis **corrige** les erreurs de configuration les plus courantes dans le code d'infrastructure, et comment on **empêche leur retour** grâce à un pipeline automatisé (approche DevSecOps / *shift-left*).
-
-Chaque cas existe en deux versions :
-
-| Dossier | Contenu |
-|---|---|
-| `terraform/before` · `docker/before` | Code **volontairement vulnérable** (à ne jamais déployer) |
-| `terraform/after` · `docker/after` | Même besoin fonctionnel, **durci** et conforme aux contrôles |
-
-### Résultats
-
-| Cible | Version | Contrôles réussis | Contrôles en échec |
-|---|---|---|---|
-| Terraform (AWS) | avant | 7 | **28** |
-| Terraform (AWS) | après | 65 | **0** (5 exceptions documentées) |
-| Dockerfile | avant | 31 | **5** |
-| Dockerfile | après | 48 | **0** |
-
-*Mesuré avec Checkov 3.3.30. Les chiffres peuvent évoluer avec les versions de l'outil.*
-
-Les 5 exceptions Terraform sont déclarées dans `terraform/after/main.tf` (commentaires `checkov:skip` avec justification) : réplication inter-région et notifications d'événements S3 (hors périmètre du lab), et journalisation du bucket de logs lui-même.
-
-### Ce qui est couvert
-
-**Terraform (AWS)** : bucket S3 public / non chiffré, security group ouvert à Internet, EC2 avec IMDSv1 et disque non chiffré, politique IAM `*:*`.
-
-**Docker** : image `latest`, exécution en root, secrets dans l'image, `ADD`, absence de `HEALTHCHECK`, `privileged`, montage de `docker.sock`, mode debug, ports exposés, absence de limites de ressources.
-
-Le détail de chaque constat (contrôle, correction, lien avec ISO 27002:2022 et NIST CSF 2.0) est dans [`docs/findings-mapping.md`](docs/findings-mapping.md).
-
-### Structure
-
-```
-secure-iac-lab/
-├── terraform/
-│   ├── before/main.tf          # vulnérable
-│   └── after/                  # durci (main.tf, variables.tf)
-├── docker/
-│   ├── before/                 # Dockerfile, app.py, docker-compose.yml vulnérables
-│   └── after/                  # versions durcies + .dockerignore
-├── docs/findings-mapping.md    # constats ↔ contrôles ↔ référentiels
-├── scripts/run-local.sh        # contrôles en local
-└── .github/workflows/iac-security.yml
-```
-
-### Utilisation en local
-
-```bash
-pip install checkov
-bash scripts/run-local.sh
-```
-
-Ou manuellement :
-
-```bash
-checkov -d terraform/before --framework terraform   # échecs attendus
-checkov -d terraform/after  --framework terraform   # doit réussir
-checkov -d docker/after     --framework dockerfile
-```
-
-Pour Docker Compose, lancez `docker compose up` depuis `docker/after` après avoir créé le fichier `secret_key.txt` (non versionné) :
-
-```bash
-cd docker/after
-python3 -c "import secrets; print(secrets.token_urlsafe(48))" > secret_key.txt
-docker compose up --build
-```
-
-### Pipeline CI (GitHub Actions)
-
-Le workflow `.github/workflows/iac-security.yml` exécute :
-
-- **Checkov** (Terraform et Dockerfile), **Hadolint** et **Trivy** (configuration) sur les versions `after` : le pipeline doit être **vert** ;
-- **Checkov** et **Gitleaks** sur les versions `before` : rapports publiés en artefacts, sans bloquer le pipeline, pour comparer.
-
-Les résultats SARIF sont envoyés vers l'onglet *Security* du dépôt (dépôt public, ou dépôt privé avec GitHub Advanced Security).
-
-### Pistes d'amélioration
-
-- Épingler les actions GitHub par SHA de commit.
-- Ajouter un scan des dépendances (Trivy / OSV-Scanner) et un SBOM (Syft).
-- Ajouter des politiques sur mesure (Checkov custom policies ou OPA/Conftest).
-- Ajouter une version Kubernetes (manifests ou Helm) avant / après.
-
-### Avertissement
-
-Le code `before` est un support pédagogique. Les valeurs (noms de buckets, AMI, identifiants) sont fictives. Aucune donnée réelle d'organisation n'est utilisée.
-
----
 
 ## 🇬🇧 English
 
@@ -184,5 +87,14 @@ The `before` code is a teaching sample. All values (bucket names, AMI, credentia
 ---
 
 ## 📄 Licence / License
+
+
+
+## About
+
+Project built by **Sahar Hamdi**, Cybersecurity Engineer / CISO,
+specialized in GRC, compliance auditing (ISO 27001, NIS2), and IAM/PAM.
+
+- LinkedIn: [*(link to be added)*](https://www.linkedin.com/in/sahar-hamdi-989775153/)
 
 MIT — voir / see [LICENSE](LICENSE).
