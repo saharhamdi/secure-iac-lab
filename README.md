@@ -83,7 +83,7 @@ The `before` code is a teaching sample. All values (bucket names, AMI, credentia
 
 ---
 
-## 📄 Licence / License
+## 📄 License
 
 
 
