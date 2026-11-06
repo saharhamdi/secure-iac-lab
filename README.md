@@ -1,7 +1,6 @@
 # 🔐 secure-iac-lab
 
-**Infrastructure as Code sécurisée : Terraform & Docker, avant / après correction, avec contrôles automatiques**
-*Secure Infrastructure as Code: Terraform & Docker, before / after remediation, with automated checks*
+**Secure Infrastructure as Code: Terraform & Docker, before / after remediation, with automated checks**
 
 ![IaC Security Scan](../../actions/workflows/iac-security.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
